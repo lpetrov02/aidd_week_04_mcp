@@ -4,3 +4,4 @@ todo_db.json
 *.json.tmp
 .env
 node_modules/
+.DS_Store

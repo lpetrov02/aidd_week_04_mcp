@@ -1,8 +1,5 @@
 {
   "$version": 4,
-  "env": {
-    "MODEL_API_KEY": "<model_api_key>"
-  },
   "modelProviders": {
     "openai": [
       {
@@ -31,5 +28,9 @@
   },
   "context": {
     "fileName": ["QWEN.md"]
+  },
+  "memory": {
+    "enableManagedAutoMemory": false,
+    "enableManagedAutoDream": false
   }
 }
