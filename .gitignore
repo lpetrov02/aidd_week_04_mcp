@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+todo_db.json
+*.json.tmp
+.env
+node_modules/

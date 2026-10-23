@@ -1,0 +1,35 @@
+{
+  "$version": 4,
+  "env": {
+    "MODEL_API_KEY": "<model_api_key>"
+  },
+  "modelProviders": {
+    "openai": [
+      {
+        "id": "<model_name>",
+        "name": "<model_name>",
+        "baseUrl": "<model_url>",
+        "envKey": "MODEL_API_KEY",
+        "generationConfig": {
+          "samplingParams": {
+            "temperature": 0.8,
+            "top_p": 0.95,
+            "max_tokens": 65536
+          }
+        }
+      }
+    ]
+  },
+  "security": {
+    "auth": {
+      "selectedType": "openai"
+    }
+  },
+  "model": {
+    "name": "<model_name>",
+    "baseUrl": "<model_url>"
+  },
+  "context": {
+    "fileName": ["QWEN.md"]
+  }
+}

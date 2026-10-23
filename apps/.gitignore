@@ -1,0 +1,5 @@
+*.db
+*.json.tmp
+todo_db.json
+__pycache__/
+.venv/

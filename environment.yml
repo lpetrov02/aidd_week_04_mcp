@@ -1,0 +1,11 @@
+name: aidd-mcp
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - nodejs>=20      # npm, npx (MCP Inspector) и Qwen Code
+  - uv              # uvx нужен для запуска сторонних MCP-серверов
+  - pip
+  - pip:
+      - flask>=3.0  # TODO-приложение
+      - mcp>=1.9,<3 # MCP-сервер (работает на SDK 1.x и 2.x)

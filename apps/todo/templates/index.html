@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TODO demo</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --text:#1c1f26; --muted:#6b7280; --line:#e5e7eb; --accent:#4f46e5; --danger:#dc2626; --ok:#16a34a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14161a; --card:#1d2026; --text:#e8eaed; --muted:#9aa0a9; --line:#2d3139; --accent:#818cf8; --danger:#f87171; --ok:#4ade80; } }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.4 system-ui,sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { font-size:22px; margin:0 0 4px } .sub { color:var(--muted); margin-bottom:20px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px; }
+  form { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px }
+  input,select,button { font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text) }
+  input[type=text] { flex:1 1 220px } button { cursor:pointer } button.primary { background:var(--accent); color:#fff; border-color:var(--accent) }
+  button.danger { color:var(--danger) } button.ok { color:var(--ok) }
+  .task { display:flex; align-items:center; gap:10px } .task .title { flex:1 } .done .title { text-decoration:line-through; color:var(--muted) }
+  .meta { font-size:12px; color:var(--muted) } .badge { font-size:11px; padding:1px 7px; border-radius:99px; border:1px solid var(--line) }
+  .high { color:var(--danger); border-color:var(--danger) } .overdue { color:var(--danger) }
+  #msg { color:var(--danger); min-height:20px; margin-bottom:8px } .filters button.active { border-color:var(--accent); color:var(--accent) }
+  .empty { color:var(--muted); text-align:center; padding:24px }
+</style>
+</head>
+<body>
+<main>
+  <h1>TODO demo</h1>
+  <div class="sub">Список обновляется сам: изменения агента появятся здесь через пару секунд.</div>
+  <div id="msg" role="alert"></div>
+  <form id="add">
+    <input type="text" name="title" placeholder="Новая задача" maxlength="200" required>
+    <select name="priority"><option value="low">низкий</option><option value="normal" selected>обычный</option><option value="high">высокий</option></select>
+    <input type="date" name="due">
+    <button class="primary">Добавить</button>
+  </form>
+  <div class="filters" style="margin-bottom:12px">
+    <button data-f="">Все</button> <button data-f="false">Открытые</button> <button data-f="true">Выполненные</button>
+  </div>
+  <div id="list"></div>
+</main>
+<script>
+let filter = "";
+const $ = s => document.querySelector(s);
+const PRI = {low:"низкий", normal:"обычный", high:"высокий"};
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML }
+async function api(method, url, data) {
+  const r = await fetch(url, {method, headers:{"Content-Type":"application/json"}, body: data ? JSON.stringify(data) : undefined});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+async function act(fn) { try { $("#msg").textContent = ""; await fn(); } catch(e) { $("#msg").textContent = "Ошибка: " + e.message; } await refresh(); }
+async function refresh() {
+  try {
+    const [tasks] = await Promise.all([api("GET", "/api/tasks" + (filter ? "?done="+filter : ""))]);
+    const today = new Date().toISOString().slice(0,10);
+    $("#list").innerHTML = tasks.length ? tasks.map(t => `<div class="card task ${t.done?"done":""}">
+      <input type="checkbox" ${t.done?"checked":""} onchange="act(()=>api('PATCH','/api/tasks/${t.id}',{done:this.checked}))">
+      <div class="title">${esc(t.title)}<div class="meta">#${t.id}
+        ${t.priority!=="normal" ? `<span class="badge ${t.priority}">${PRI[t.priority]}</span>`:""}
+        ${t.due ? `<span class="${!t.done && t.due<today?"overdue":""}">до ${t.due}</span>`:""}</div></div>
+      <button onclick="rename(${t.id}, this.dataset.t)" data-t="${esc(t.title).replace(/"/g,"&quot;")}">Изменить</button>
+      <button class="danger" onclick="act(()=>api('DELETE','/api/tasks/${t.id}'))">Удалить</button></div>`).join("")
+      : `<div class="empty">Задач нет</div>`;
+    document.querySelectorAll(".filters button").forEach(b => b.classList.toggle("active", b.dataset.f === filter));
+  } catch(e) { $("#msg").textContent = "Ошибка: " + e.message; }
+}
+function rename(id, old) { const t = prompt("Новое название", old); if (t !== null) act(() => api("PATCH", "/api/tasks/"+id, {title:t})); }
+$("#add").onsubmit = e => { e.preventDefault(); const f = e.target;
+  act(async () => { await api("POST", "/api/tasks", {title:f.title.value, priority:f.priority.value, due:f.due.value||null}); f.title.value=""; f.due.value=""; }); };
+document.querySelectorAll(".filters button").forEach(b => b.onclick = () => { filter = b.dataset.f; refresh(); });
+refresh(); setInterval(refresh, 2000);
+</script>
+</body>
+</html>
