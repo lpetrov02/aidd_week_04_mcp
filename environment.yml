@@ -3,9 +3,11 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - nodejs>=20      # npm, npx (MCP Inspector) и Qwen Code
-  - uv              # uvx нужен для запуска сторонних MCP-серверов
+  - nodejs>=20              # npm, npx (MCP Inspector) и Qwen Code
+  - uv                      # uvx для запуска сторонних MCP-серверов
   - pip
   - pip:
-      - flask>=3.0  # TODO-приложение
-      - mcp>=1.9,<3 # MCP-сервер (работает на SDK 1.x и 2.x)
+      - flask>=3.0            # TODO-приложение
+      - mcp>=2.2,<3           # MCP-сервер и его тесты (SDK 2.x)
+      - openpyxl>=3.1         # сборка .xlsx в skill make_report (задание 1)
+      - excel-mcp-server>=2.2 # готовый MCP-сервер для Excel
