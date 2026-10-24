@@ -33,14 +33,14 @@ GEN_SETTINGS="$SCRIPT_DIR/settings.generated.json"
 trap 'rm -f "$GEN_SETTINGS"' EXIT
 python3 - "$AGENT_DIR/.qwen/settings.json" "$GEN_SETTINGS" <<'PY'
 import json, sys
+import os
+
 src, dst = sys.argv[1], sys.argv[2]
 s = json.load(open(src, encoding="utf-8"))
-s["mcpServers"] = {
-    "todo": {
-        "command": "python",
-        "args": ["/opt/todo-mcp/server.py"],
-        "env": {"TODO_API_URL": "http://host.docker.internal:${APP_PORT}"},
-    }
+s["mcpServers"]["todo"] = {
+    "command": "python",
+    "args": ["/opt/todo-mcp/server.py"],
+    "env": {"TODO_API_URL": f"http://host.docker.internal:{os.getenv('APP_PORT', 5000)}"},
 }
 json.dump(s, open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 PY
