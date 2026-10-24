@@ -83,6 +83,9 @@ python seed.py 30 --seed 42 # добавить задачи (--seed 42 даёт 
 
 ```bash
 export MODEL_API_KEY=...    # ключ не попадёт в settings.json и в git
+
+# путь к settings.json, который Qwen будет использовать (абсолютный)
+export QWEN_CODE_SYSTEM_SETTINGS_PATH="$PWD/practice/agent/.qwen/settings.json"
 ```
 
 **Агент и MCP-сервер.** Запуск агента:
