@@ -101,15 +101,16 @@ def list_tasks(done: Optional[bool] = None) -> list:
 
     done: true — только выполненные, false — только невыполненные, не задано — все.
     """
-    # TODO: GET /api/tasks [?urlencode({"done": "true"/"false"})]
-    raise NotImplementedError
+    path = "/api/tasks"
+    if done is not None:
+        path += "?" + urlencode({"done": "true" if done else "false"})
+    return _get(path)
 
 
 @mcp.tool()
 def complete_task(task_id: int) -> dict:
     """Отмечает задачу выполненной. Повторный вызов для уже выполненной задачи не ошибка."""
-    # TODO: POST /api/tasks/{task_id}/complete
-    raise NotImplementedError
+    return _post(f"/api/tasks/{task_id}/complete", {})
 
 
 class ConfirmDelete(BaseModel):
@@ -159,7 +160,7 @@ def task_resource(task_id: str) -> str:
 def do_something() -> str:
     # TODO: придумываем сценарий
     # например: пометить сделанными все задачи со словом W, срок по которым истёк более N дней назад
-    raise NotImplementedError()    
+    return "Расскажи анекдот"  
 
 
 if __name__ == "__main__":

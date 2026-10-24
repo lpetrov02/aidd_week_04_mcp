@@ -32,5 +32,16 @@
   "memory": {
     "enableManagedAutoMemory": false,
     "enableManagedAutoDream": false
+  },
+    "mcpServers": {
+    "todo": {
+      "command": "/env/path/to/python",
+      "args": ["/path/to/mcp/server.py"],
+      "env": { "TODO_API_URL": "http://127.0.0.1:<app_port>" }
+    },
+    "excel": {
+      "command": "uvx",
+      "args": ["excel-mcp-server", "stdio"]
+    }
   }
 }

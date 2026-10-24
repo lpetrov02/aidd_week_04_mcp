@@ -12,6 +12,8 @@
 #   3) задайте ключ модели:  export MODEL_API_KEY=...
 set -euo pipefail
 
+APP_PORT=${APP_PORT:-5000}
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 AGENT_DIR="$REPO_ROOT/practice/agent"
@@ -37,7 +39,7 @@ s["mcpServers"] = {
     "todo": {
         "command": "python",
         "args": ["/opt/todo-mcp/server.py"],
-        "env": {"TODO_API_URL": "http://host.docker.internal:5000"},
+        "env": {"TODO_API_URL": "http://host.docker.internal:${APP_PORT}"},
     }
 }
 json.dump(s, open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
