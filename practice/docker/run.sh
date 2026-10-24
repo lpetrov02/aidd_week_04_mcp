@@ -55,5 +55,5 @@ docker run --rm -it \
   -v "$MCP_DIR:/opt/todo-mcp:ro" \
   -v "$GEN_SETTINGS:/workspace/.qwen/settings.json:ro" \
   -e MODEL_API_KEY \
-  "${EXTRA[@]}" \
+  ${EXTRA[@]+"${EXTRA[@]}"} \
   qwen-agent "$@"
