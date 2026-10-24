@@ -310,60 +310,31 @@ Resource ничего не меняет в данных. Значит ли эт�
 По умолчанию из контейнера видно не всё: только то, что вы явно смонтировали. Файла базы `todo_db.json`, ключа `~/.todo_demo/secret.key`,
 вашего `$HOME` и остального диска там нет.
 
-**5.1. Соберите образ** с Python, Node.js, Qwen Code и зависимостями MCP-сервера (из корня репозитория, один раз, ~1-2 минуты):
+**5.1–5.3. Соберите образ и запустите агента.** Всё для Docker лежит в [practice/docker/](practice/docker/): `Dockerfile` и скрипты `build.sh` / `run.sh`.
 
 ```bash
-docker build -t qwen-agent - <<'EOF'
-FROM node:22-bookworm-slim
-RUN apt-get update \
- && apt-get install -y --no-install-recommends python3 python3-venv ca-certificates \
- && rm -rf /var/lib/apt/lists/*
-RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir "mcp>=1.9,<3" "flask>=3.0" uv
-ENV PATH="/opt/venv/bin:$PATH"
-RUN npm install -g @qwen-code/qwen-code
-USER node
-WORKDIR /workspace
-ENTRYPOINT ["qwen"]
-EOF
-```
+practice/docker/build.sh            # собрать образ qwen-agent (один раз, ~1-2 минуты)
 
-**5.2. Сделайте настройки для контейнера.** Внутри контейнера пути другие, поэтому `settings.json` с путями вашего компьютера не подойдёт.
-Сделайте копию `practice/agent/.qwen/settings.docker.json`: те же настройки модели, но другой `mcpServers`:
+cd apps && python -m todo.web       # приложение на хосте, в отдельном терминале
 
-```json
-"mcpServers": {
-  "todo": {
-    "command": "python",
-    "args": ["/opt/todo-mcp/server.py"],
-    "env": { "TODO_API_URL": "http://host.docker.internal:5000" }
-  }
-}
-```
-
-**5.3. Запустите агента.** Приложение запускается на хосте как обычно (шаг 2), агент — в контейнере (из корня репозитория):
-
-```bash
 export MODEL_API_KEY=...            # ключ не записывается ни в образ, ни в файл
-docker run --rm -it \
-  -v "$PWD/practice/agent:/workspace" \
-  -v "$PWD/practice/mcp:/opt/todo-mcp:ro" \
-  -v "$PWD/practice/agent/.qwen/settings.docker.json:/workspace/.qwen/settings.json:ro" \
-  -e MODEL_API_KEY \
-  qwen-agent
+practice/docker/run.sh              # агент в контейнере
 ```
 
-Что здесь происходит:
-- `practice/agent` монтируется в `/workspace`, это рабочая папка агента, и всё, что он там создаёт (например, `reports/`), остаётся у вас на диске;
-- `practice/mcp` монтируется только для чтения: агент может запустить сервер, но не может его изменить;
-- `settings.docker.json` подставляется поверх `settings.json` только внутри контейнера, файл на диске не меняется;
+`run.sh` берёт модель и ключ из `practice/agent/.qwen/settings.json`, подменяет только `mcpServers`
+(путь к серверу внутри контейнера и `TODO_API_URL=http://host.docker.internal:5000`) и монтирует:
+
+- `practice/agent` → `/workspace` — рабочая папка агента, всё, что он там создаёт (например, `reports/`), остаётся у вас на диске;
+- `practice/mcp` → `/opt/todo-mcp` (только для чтения) — агент может запустить сервер, но не изменить его;
+- сгенерированный settings → `/workspace/.qwen/settings.json` (только для чтения), файл `settings.json` на диске не меняется;
 - к приложению на хосте контейнер ходит по адресу `host.docker.internal`.
 
 **5.4. Проверьте, что видит агент.** Попросите его выполнить `ls /Users`, `cat ~/.todo_demo/secret.key`, `cat todo_db.json`: ничего этого в контейнере нет.
 Затем `/mcp` (сервер `todo` должен быть подключён) и «покажи задачи»: работа с задачами идёт как обычно, через MCP.
 
 Ограничения: сеть из контейнера по умолчанию открыта (модель тоже доступна только через сеть), её при необходимости ограничивают отдельно.
-Проверено в Docker Desktop (macOS). На Linux добавьте к `docker run` флаг `--add-host=host.docker.internal:host-gateway` и `--user "$(id -u):$(id -g)"`,
-а приложение должно быть доступно не только на `127.0.0.1`.
+Проверено в Docker Desktop (macOS). На Linux `run.sh` сам добавляет `--add-host=host.docker.internal:host-gateway` и `--user "$(id -u):$(id -g)"`;
+приложение при этом должно слушать не только `127.0.0.1`.
 
 ### Часть 6. Автоматизация в n8n
 
